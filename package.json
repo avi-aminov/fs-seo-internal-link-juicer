@@ -1,0 +1,21 @@
+{
+  "name": "fs-seo-internal-link-juicer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:dist": "gulp buildDist --gulpfile gulpfile.mjs",
+    "build:dist:watch": "gulp buildDistWatch --gulpfile gulpfile.mjs",
+    "build:prod": "gulp buildProd --gulpfile gulpfile.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-clean": "^0.4.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-uglify": "^3.0.2",
+    "gulp-zip": "^6.0.0"
+  }
+}
