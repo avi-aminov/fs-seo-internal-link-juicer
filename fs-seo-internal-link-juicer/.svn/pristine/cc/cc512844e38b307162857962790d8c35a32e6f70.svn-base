@@ -1,6 +1,4 @@
-<?php //echo esc_html($nonce);
-?>
-<?php echo $nonce; ?>
+<?php echo esc_attr($nonce); ?>
 <div id="focus-keyphrase-container">
     <?php if (!empty($values)) : ?>
         <?php foreach ($values as $index => $value) : ?>

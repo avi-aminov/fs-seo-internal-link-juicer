@@ -133,6 +133,7 @@ class FS_SEO_ILJ_Post_List
                 echo esc_html__('No Keyphrases', 'fs-seo-internal-link-juicer');
             }
             echo '</td>';
+
             echo '<td>' . wp_kses($linked_from, [
                 'a' => [
                     'href' => [],
@@ -152,7 +153,10 @@ class FS_SEO_ILJ_Post_List
                     'data-url' => [],
                     'data-action' => [],
                 ],
+                'h4' => [],
+                'br' => [],
             ]) . '</td>';
+
             echo '</tr>';
         }
 
