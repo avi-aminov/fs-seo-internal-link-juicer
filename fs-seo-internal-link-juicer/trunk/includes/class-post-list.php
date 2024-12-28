@@ -11,7 +11,7 @@ class FS_SEO_ILJ_Post_List
         $added_post_types = $options['added_post_types'] ?? ['post'];
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('SEO Internal Link Juicer', 'fs-seo-internal-link-juicer') . '</h1>';
+        echo FS_SEO_ILJ_Helper::get_title();
 
         // Only verify nonce if there is form data to process
         if (isset($_GET['_wpnonce'])) {
@@ -49,13 +49,12 @@ class FS_SEO_ILJ_Post_List
         echo '</div>'; // End .wrap
     }
 
-
     private function render_global_filter_form()
     {
         // Validate and sanitize GET parameters with wp_unslash
-        $search_query = isset($_GET['fs_search_query']) ? sanitize_text_field(wp_unslash($_GET['fs_search_query'])) : '';
-        $order_by = isset($_GET['fs_order_by']) ? sanitize_text_field(wp_unslash($_GET['fs_order_by'])) : 'title';
-        $order_direction = isset($_GET['fs_order_direction']) ? sanitize_text_field(wp_unslash($_GET['fs_order_direction'])) : 'ASC';
+        $search_query = FS_SEO_ILJ_Helper::get_search_query();
+        $order_by = FS_SEO_ILJ_Helper::get_order_by();
+        $order_direction = FS_SEO_ILJ_Helper::get_order_direction();
 
         echo '<form method="get" action="" class="fs-seo-ilj-filter-form">';
 
@@ -83,12 +82,11 @@ class FS_SEO_ILJ_Post_List
         echo '</form>';
     }
 
-
     private function render_post_type_list($post_type)
     {
-        $search_query = isset($_GET['fs_search_query']) ? sanitize_text_field(wp_unslash($_GET['fs_search_query'])) : '';
-        $order_by = isset($_GET['fs_order_by']) ? sanitize_text_field(wp_unslash($_GET['fs_order_by'])) : 'title';
-        $order_direction = isset($_GET['fs_order_direction']) ? sanitize_text_field(wp_unslash($_GET['fs_order_direction'])) : 'ASC';
+        $search_query = FS_SEO_ILJ_Helper::get_search_query();
+        $order_by = FS_SEO_ILJ_Helper::get_order_by();
+        $order_direction = FS_SEO_ILJ_Helper::get_order_direction();
 
         $args = [
             'post_type'   => $post_type,
@@ -96,23 +94,14 @@ class FS_SEO_ILJ_Post_List
             's'           => $search_query,
         ];
 
-        $posts = get_posts($args);
+        $pre_sort_posts = get_posts($args);
 
-        usort($posts, function ($a, $b) use ($order_by, $order_direction) {
-            if ($order_by === 'focus_keyphrase') {
-                $a_keyphrase = get_post_meta($a->ID, '_fs_seo_ilj_focus_keyphrase', true);
-                $b_keyphrase = get_post_meta($b->ID, '_fs_seo_ilj_focus_keyphrase', true);
-                $result = strcmp($a_keyphrase, $b_keyphrase);
-            } elseif ($order_by === 'linked_from') {
-                $a_linked_from = wp_strip_all_tags($this->find_linked_from_posts(get_post_meta($a->ID, '_fs_seo_ilj_focus_keyphrase', true), $a->ID));
-                $b_linked_from = wp_strip_all_tags($this->find_linked_from_posts(get_post_meta($b->ID, '_fs_seo_ilj_focus_keyphrase', true), $b->ID));
-                $result = strcmp($a_linked_from, $b_linked_from);
-            } else {
-                $result = strcmp($a->post_title, $b->post_title);
-            }
-
-            return $order_direction === 'DESC' ? -$result : $result;
-        });
+        $posts = FS_SEO_ILJ_Helper::sort_posts(
+            $pre_sort_posts,
+            $order_by,
+            $order_direction,
+            [$this, 'find_linked_from_posts']
+        );
 
         echo '<h2>' . esc_html(get_post_type_object($post_type)->labels->name) . '</h2>';
         echo '<table class="wp-list-table widefat fixed striped">';
@@ -123,23 +112,31 @@ class FS_SEO_ILJ_Post_List
         echo '</tr></thead><tbody>';
 
         foreach ($posts as $post) {
-            $keyphrase = get_post_meta($post->ID, '_fs_seo_ilj_focus_keyphrase', true);
-            $linked_from = wp_kses_post($this->find_linked_from_posts($keyphrase, $post->ID));
+            $keyphrases = get_post_meta($post->ID, '_fs_seo_ilj_focus_keyphrases', true);
+            $linked_from = wp_kses_post($this->find_linked_from_posts($keyphrases, $post->ID));
 
             echo '<tr>';
             echo '<td><a href="' . esc_url(get_edit_post_link($post->ID)) . '">' . esc_html($post->post_title) . '</a></td>';
-            echo '<td>' . ($keyphrase ? esc_html($keyphrase) : esc_html__('No Keyphrase', 'fs-seo-internal-link-juicer')) . '</td>';
-            echo '<td>' . wp_kses_post($linked_from) . '</td>';
+            echo '<td>';
+            if (!empty($keyphrases) && is_array($keyphrases)) {
+                echo implode('<br>', array_map('esc_html', $keyphrases));
+            } else {
+                echo esc_html__('No Keyphrases', 'fs-seo-internal-link-juicer');
+            }
+            echo '</td>';
+
+            echo '<td>' . wp_kses($linked_from, FS_SEO_ILJ_Helper::get_html_attribute_access()) . '</td>';
+
             echo '</tr>';
         }
 
         echo '</tbody></table>';
     }
 
-    private function find_linked_from_posts($keyphrase, $post_id)
+    private function find_linked_from_posts($keyphrases, $post_id)
     {
-        if (empty($keyphrase)) {
-            return esc_html__('No Keyphrase', 'fs-seo-internal-link-juicer');
+        if (empty($keyphrases) || !is_array($keyphrases)) {
+            return esc_html__('No Keyphrases', 'fs-seo-internal-link-juicer');
         }
 
         $post_types = get_post_types(['public' => true], 'names');
@@ -148,39 +145,54 @@ class FS_SEO_ILJ_Post_List
 
         $post_types = array_intersect($post_types, $added_post_types);
 
-        $linked_posts = [];
+        $linked_posts_summary = [];
 
-        foreach ($post_types as $post_type) {
-            $posts = get_posts([
-                'post_type'   => $post_type,
-                'numberposts' => -1,
-                'fields'      => 'ids', // Optimize query to fetch only IDs.
-            ]);
+        foreach ($keyphrases as $keyphrase) {
+            $linked_posts = [];
 
-            // Manually filter out the excluded post ID.
-            $posts = array_filter($posts, function ($id) use ($post_id) {
-                return $id !== $post_id;
-            });
+            foreach ($post_types as $post_type) {
+                $posts = get_posts([
+                    'post_type'   => $post_type,
+                    'numberposts' => -1,
+                    'fields'      => 'ids', // Optimize query to fetch only IDs.
+                ]);
 
-            if (!empty($posts)) {
-                $posts = array_map('get_post', $posts); // Convert IDs back to post objects.
-            }
+                // Manually filter out the excluded post ID.
+                $posts = array_filter($posts, function ($id) use ($post_id) {
+                    return $id !== $post_id;
+                });
 
-            foreach ($posts as $post) {
-                if (stripos($post->post_content, $keyphrase) !== false) {
-                    $pattern = '/<a\s[^>]*href=[\'"]([^\'"]*)[\'"][^>]*>' . preg_quote($keyphrase, '/') . '<\/a>/i';
-                    $has_link = preg_match($pattern, $post->post_content);
+                if (!empty($posts)) {
+                    $posts = array_map('get_post', $posts); // Convert IDs back to post objects.
+                }
 
-                    $link_status = $has_link ? '<span style="color:green;">Yes</span>' : '<span style="color:red;">No</span>';
-                    $post_type_label = get_post_type_object($post_type)->labels->singular_name;
+                foreach ($posts as $post) {
+                    if (stripos($post->post_content, $keyphrase) !== false) {
+                        $pattern = '/<a\s[^>]*href=[\'"]([^\'"]*)[\'"][^>]*>' . preg_quote($keyphrase, '/') . '<\/a>/i';
+                        $has_link = preg_match($pattern, $post->post_content);
 
-                    $toggle_button = '<button class="toggle-link" data-post-id="' . esc_attr($post->ID) . '" data-keyphrase="' . esc_attr($keyphrase) . '" data-url="' . esc_url(get_permalink($post_id)) . '" data-action="' . ($has_link ? 'remove' : 'add') . '">' . ($has_link ? esc_html__('Remove Link', 'fs-seo-internal-link-juicer') : esc_html__('Add Link', 'fs-seo-internal-link-juicer')) . '</button>';
+                        $link_status = $has_link ? '<span style="color:green;">Yes</span>' : '<span style="color:red;">No</span>';
+                        $post_type_label = get_post_type_object($post_type)->labels->singular_name;
 
-                    $linked_posts[] = '<a href="' . esc_url(get_edit_post_link($post->ID)) . '">' . esc_html($post->post_title) . '</a> (' . $link_status . ' - ' . esc_html($post_type_label) . ' - ' . $toggle_button . ')';
+                        $toggle_button = '<button class="toggle-link" data-post-id="' . esc_attr($post->ID) . '" data-keyphrase="' . esc_attr($keyphrase) . '" data-url="' . esc_url(get_permalink($post_id)) . '" data-action="' . ($has_link ? 'remove' : 'add') . '">' . ($has_link ? esc_html__('Remove Link', 'fs-seo-internal-link-juicer') : esc_html__('Add Link', 'fs-seo-internal-link-juicer')) . '</button>';
+
+                        $linked_posts[] = '<a href="' . esc_url(get_edit_post_link($post->ID)) . '">' . esc_html($post->post_title) . '</a> (' . $link_status . ' - ' . esc_html($post_type_label) . ' - ' . $toggle_button . ')';
+                    }
                 }
             }
+
+            $linked_posts_summary[$keyphrase] = empty($linked_posts)
+                ? esc_html__('No Links Found', 'fs-seo-internal-link-juicer')
+                : implode(', <br>', $linked_posts);
         }
 
-        return empty($linked_posts) ? esc_html__('No Links Found', 'fs-seo-internal-link-juicer') : implode(', <br>', $linked_posts);
+        // Build the output for all keyphrases
+        $output = '';
+        foreach ($linked_posts_summary as $keyphrase => $linked_posts) {
+            $output .= '<h4>' . esc_html($keyphrase) . '</h4>';
+            $output .= $linked_posts;
+        }
+
+        return $output;
     }
 }

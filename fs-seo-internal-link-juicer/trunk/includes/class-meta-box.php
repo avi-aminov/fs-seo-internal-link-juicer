@@ -25,13 +25,16 @@ class FS_SEO_ILJ_Meta_Box
 
     public function render_meta_box($post)
     {
-        $value = get_post_meta($post->ID, '_fs_seo_ilj_focus_keyphrase', true);
+        $values = get_post_meta($post->ID, '_fs_seo_ilj_focus_keyphrases', true);
+        $values = is_array($values) ? $values : [];
 
         // Add nonce for verification
-        wp_nonce_field('fs_seo_ilj_save_meta', 'fs_seo_ilj_meta_nonce');
+        $nonce = wp_nonce_field('fs_seo_ilj_save_meta', 'fs_seo_ilj_meta_nonce', true, false);
 
-        echo '<label for="fs_seo_ilj_focus_keyphrase">' . esc_html__('Enter Focus Keyphrase:', 'fs-seo-internal-link-juicer') . '</label><br>';
-        echo '<input type="text" name="fs_seo_ilj_focus_keyphrase" id="fs_seo_ilj_focus_keyphrase" value="' . esc_attr($value) . '" />';
+        FS_SEO_ILJ_Template_Loader::include_template('meta-box-focus-keyphrase-multiple', [
+            'values' => $values,
+            'nonce' => $nonce
+        ]);
     }
 
     public function save_meta($post_id)
@@ -56,10 +59,10 @@ class FS_SEO_ILJ_Meta_Box
             return;
         }
 
-        // Save the focus keyphrase
-        if (isset($_POST['fs_seo_ilj_focus_keyphrase'])) {
-            $keyphrase = sanitize_text_field(wp_unslash($_POST['fs_seo_ilj_focus_keyphrase']));
-            update_post_meta($post_id, '_fs_seo_ilj_focus_keyphrase', $keyphrase);
+        // Save the keyphrases
+        if (isset($_POST['fs_seo_ilj_focus_keyphrases']) && is_array($_POST['fs_seo_ilj_focus_keyphrases'])) {
+            $keyphrases = array_map('sanitize_text_field', wp_unslash($_POST['fs_seo_ilj_focus_keyphrases']));
+            update_post_meta($post_id, '_fs_seo_ilj_focus_keyphrases', $keyphrases);
         }
     }
 }

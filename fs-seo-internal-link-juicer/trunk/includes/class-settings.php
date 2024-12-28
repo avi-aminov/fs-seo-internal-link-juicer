@@ -52,26 +52,21 @@ class FS_SEO_ILJ_Settings
         // Get all public post types.
         $post_types = get_post_types(['public' => true], 'objects');
 
-        // Loop through each post type and display a checkbox.
-        foreach ($post_types as $post_type) {
-            // Check if this post type is in the saved options.
-            $checked = in_array($post_type->name, $added_post_types) ? 'checked="checked"' : '';
-
-            // Display the checkbox for the post type.
-            echo '<label>';
-            echo '<input type="checkbox" name="fs_seo_ilj_settings[added_post_types][]" value="' . esc_attr($post_type->name) . '" ' . esc_attr($checked) . ' />';
-            echo esc_html($post_type->labels->name);
-            echo '</label><br>';
-        }
+        // Include the template for checkboxes.
+        FS_SEO_ILJ_Template_Loader::include_template('added-post-types-field', [
+            'post_types' => $post_types,
+            'added_post_types' => $added_post_types
+        ]);
     }
 
     public function render_link_pattern_field()
     {
         $options = get_option('fs_seo_ilj_settings');
         $link_pattern = $options['link_pattern'] ?? '<a class="seo-internal-link" href="{{url}}">{{anchor}}</a>';
-        echo '<input type="text" name="fs_seo_ilj_settings[link_pattern]" value="' . esc_attr($link_pattern) . '" size="70" /><br>';
-        echo '<p><b>' . esc_html__('Options:', 'fs-seo-internal-link-juicer') . '</b> {{url}}, {{anchor}}</p>';
-        echo '<p><b>' . esc_html__('Example:', 'fs-seo-internal-link-juicer') . '</b> ' . esc_html('<a class="seo-internal-link" href="{{url}}">{{anchor}}</a>') . '</p>';
+
+        FS_SEO_ILJ_Template_Loader::include_template('link-pattern-field', [
+            'link_pattern' => $link_pattern
+        ]);
     }
 
     public function sanitize_fs_seo_ilj_settings($input)

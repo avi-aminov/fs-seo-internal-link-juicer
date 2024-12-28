@@ -4,7 +4,7 @@
  * Plugin Name: FS SEO Internal Link Juicer
  * Plugin URI: https://fullstackdeveloper.co.il/fs-seo-internal-link-juicer/
  * Description: A plugin to add SEO internal links between posts, pages and other post types based on focus keyphrases.
- * Version:     1.0.1
+ * Version:     1.0.4
  * Author:      Avi Aminov
  * Author URI: https://fullstackdeveloper.co.il/
  * License: GPL v2 or later
@@ -18,6 +18,7 @@ if (! defined('ABSPATH')) exit;
 
 define('FS_SEO_ILJ_PATH', plugin_dir_path(__FILE__));
 define('FS_SEO_ILJ_URL', plugin_dir_url(__FILE__));
+define('FS_SEO_ILJ_VERSION', '1.0.4');
 
 class FS_SEO_Internal_Link_Juicer
 {
@@ -42,6 +43,8 @@ class FS_SEO_Internal_Link_Juicer
     private function includes()
     {
         require_once FS_SEO_ILJ_PATH . 'includes/class-admin-menu.php';
+        require_once FS_SEO_ILJ_PATH . 'includes/class-template-loader.php';
+        require_once FS_SEO_ILJ_PATH . 'includes/class-helper.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-meta-box.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-post-list.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-ajax-handler.php';
@@ -59,7 +62,14 @@ class FS_SEO_Internal_Link_Juicer
 
     public function enqueue_scripts()
     {
-        wp_enqueue_script('fs-seo-internal-link-juicer-js', FS_SEO_ILJ_URL . 'dist/js/fs-seo-internal-link-juicer.js', ['jquery'], '1.0.0', true);
+        wp_enqueue_script(
+            'fs-seo-internal-link-juicer-js',
+            FS_SEO_ILJ_URL . 'dist/js/fs-seo-internal-link-juicer.js',
+            ['jquery'],
+            FS_SEO_ILJ_VERSION,
+            true
+        );
+
         wp_localize_script('fs-seo-internal-link-juicer-js', 'FS_SEO_Internal_Link_Juicer', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('FS_SEO_Internal_Link_Juicer_nonce'),
@@ -72,7 +82,7 @@ class FS_SEO_Internal_Link_Juicer
             'fs-seo-internal-link-juicer-css',
             plugin_dir_url(__FILE__) . 'dist/css/fs-seo-internal-link-juicer.css',
             [],
-            '1.0.0'
+            FS_SEO_ILJ_VERSION
         );
     }
 }
