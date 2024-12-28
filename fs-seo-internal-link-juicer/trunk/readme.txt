@@ -5,7 +5,7 @@ Tags: internal links, SEO, focus keyphrase, link management, post links
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.2
-Stable Tag: 1.0.3
+Stable Tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,8 @@ Enhance SEO by linking posts, pages, and custom post types based on focus keyphr
 - User-friendly interface with tabs, filters, and search for easy management.
 - Fully responsive design optimized for modern WordPress environments.
 - Compatible with popular themes and plugins.
+- New static helper class for streamlined operations.
+- Improved CSS styling for better UI/UX.
 
 **Why Use SEO Internal Link Juicer?**
 - Improve your site's **SEO performance** by strengthening internal linking structures.
@@ -63,6 +65,13 @@ No, the plugin is optimized for performance and only runs its operations in the 
 
 == Changelog ==
 
+= 1.0.4 =
+* Introduced a new static helper class for reusable operations.
+* Added `get_html_attribute_access` for consistent HTML sanitization.
+* Improved UI with updated CSS styling for better user experience.
+* Enhanced post sorting with `sort_posts` method in helper class.
+* Fixed minor bugs and optimized performance.
+
 = 1.0.3 =
 * Fixed issue with `<h4>` tags being removed when rendering linked posts.
 * Added support for multiple keyphrases in linked posts.
@@ -83,6 +92,9 @@ No, the plugin is optimized for performance and only runs its operations in the 
 * User-friendly settings page.
 
 == Upgrade Notice ==
+
+= 1.0.4 =
+Upgrade to version 1.0.4 for the new helper class, improved CSS styling, better sanitization, and performance optimizations.
 
 = 1.0.3 =
 Upgrade to version 1.0.3 for better handling of `<h4>` tags, multiple keyphrase support, enhanced sanitization with `wp_kses`, and bug fixes.

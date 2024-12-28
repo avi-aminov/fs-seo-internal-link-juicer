@@ -4,7 +4,7 @@
  * Plugin Name: FS SEO Internal Link Juicer
  * Plugin URI: https://fullstackdeveloper.co.il/fs-seo-internal-link-juicer/
  * Description: A plugin to add SEO internal links between posts, pages and other post types based on focus keyphrases.
- * Version:     1.0.4
+ * Version:     1.0.3
  * Author:      Avi Aminov
  * Author URI: https://fullstackdeveloper.co.il/
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (! defined('ABSPATH')) exit;
 
 define('FS_SEO_ILJ_PATH', plugin_dir_path(__FILE__));
 define('FS_SEO_ILJ_URL', plugin_dir_url(__FILE__));
-define('FS_SEO_ILJ_VERSION', '1.0.4');
+define('FS_SEO_ILJ_VERSION', '1.0.3');
 
 class FS_SEO_Internal_Link_Juicer
 {
@@ -44,7 +44,6 @@ class FS_SEO_Internal_Link_Juicer
     {
         require_once FS_SEO_ILJ_PATH . 'includes/class-admin-menu.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-template-loader.php';
-        require_once FS_SEO_ILJ_PATH . 'includes/class-helper.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-meta-box.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-post-list.php';
         require_once FS_SEO_ILJ_PATH . 'includes/class-ajax-handler.php';
